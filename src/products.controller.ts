@@ -1,61 +1,43 @@
-import { Controller, Get, Render, Param } from '@nestjs/common';
+import { Controller, Get, Render, Param, Res } from '@nestjs/common';
+import { response } from 'express';
+import { ProductsService } from './models/products.service';
 @Controller('/products')
 export class ProductsController {
-  static products = [
-    {
-      id: '1',
-      name: 'TV',
-      description: 'Best tv',
-      image: 'game.png',
-      price: '1000',
-    },
-    {
-      id: '2',
-      name: 'iPhone',
-      description: 'Best iPhone',
-      image: 'safe.png',
-      price: '999',
-    },
-    {
-      id: '3',
-      name: 'Chromecast',
-      description: 'Best Chromecast',
-      image: 'submarine.png',
-      price: '30',
-    },
-    {
-      id: '4',
-      name: 'Glasses',
-      description: 'Best Glasses',
-      image: 'game.png',
-      price: '100',
-    },
-  ];
-
+  constructor(private readonly productsService: ProductsService){}
+ 
   @Get('/')
   @Render('products/index')
-  index()
+  async index()
   {
     const viewData =[];
     viewData['title'] = 'Productos - Tienda Online';
     viewData['subtitle'] = 'Lista de Productos';
-    viewData['products'] = ProductsController.products;
+    // viewData['products'] = ProductsController.products;
+    viewData['products'] = await this.productsService.findAll();
     return {
         viewData:viewData
     }
   }
 
   @Get('/:id')
-  @Render('products/show')
-  show(@Param() params){
-    const product = ProductsController.products[params.id -1];
+  // @Render('products/show')
+  async show(@Param() params,@Res() response){
+    // const product = ProductsController.products[params.id -1];
+    console.log('hasta aqui ok')
+    const product = await this.productsService.findOne(params.id);
+    console.log(product)
+    if (product === null) {
+      return response.redirect('/products');
+    }
+
     const viewData = [];
-    viewData['title'] = product.name +'- Tienda Online';
-    viewData['subtitle'] =  product.name + 'Informacion del Producto';
-    viewData['product'] = product
-    return {
-        viewData: viewData
-    };
+    viewData['title'] = product.getName() +'- Tienda Online';
+    viewData['subtitle'] =  product.getName() + 'Informacion del Producto';
+    viewData['product'] = product;
+    // return {
+    //     viewData: viewData
+    // };
+    return response.render('products/show',{ viewData: viewData});
   }
 
 }
